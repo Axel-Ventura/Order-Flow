@@ -47,3 +47,4 @@ El sistema utiliza una arquitectura de tres capas:
 3. Base de Datos (MySQL)
 
 ## Autores
+- Javier Hernández Méndez
