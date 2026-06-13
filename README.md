@@ -48,3 +48,4 @@ El sistema utiliza una arquitectura de tres capas:
 
 ## Autores
 carlos eduardo hernadez camacho
+Hector Ulises Cacho Gonzalez
