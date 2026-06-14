@@ -19,6 +19,32 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
+// Route to test Supabase connection
+app.get('/api/test-supabase', async (req, res, next) => {
+  try {
+    const supabase = require('./config/supabase');
+    const { data, error } = await supabase.from('_connection_test_').select('*').limit(1);
+    
+    // PGRST205 is "table not found", meaning connection works but table does not exist
+    if (error && error.code !== 'PGRST205') {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error al conectar con Supabase',
+        error: error
+      });
+    }
+    
+    res.json({
+      status: 'success',
+      message: 'Conexión a Supabase establecida correctamente',
+      details: error ? error.message : 'Tabla consultada con éxito',
+      data: data || []
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
