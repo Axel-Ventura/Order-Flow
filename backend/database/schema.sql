@@ -27,6 +27,7 @@ CREATE TABLE tipos_negocio (
 
 -- =========================
 -- TABLA: canales_venta
+-- Deja preparada la BD para pedidos de WhatsApp, Facebook e Instagram
 -- En el MVP puede usarse manual
 -- =========================
 CREATE TABLE canales_venta (
