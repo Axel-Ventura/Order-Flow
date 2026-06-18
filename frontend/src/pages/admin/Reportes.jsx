@@ -3,7 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts'
-import { reportesMensuales, pedidos, formatCurrency, getBadgeLabel } from '../../data/mockData'
+import { reportesMensuales, pedidos, formatCurrency } from '../../data/mockData'
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']
 

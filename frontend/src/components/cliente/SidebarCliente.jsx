@@ -1,7 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { ShoppingBag, ClipboardList, User, LogOut, LayoutGrid } from 'lucide-react'
+import { ClipboardList, User, LogOut, LayoutGrid } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { useCart } from '../../context/CartContext'
 
 const navItems = [
   { to: '/',        label: 'Catálogo',    icon: LayoutGrid,    end: true },

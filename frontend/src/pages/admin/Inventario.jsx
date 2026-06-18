@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
-import { productos as initialProductos, categorias, getBadgeClass, getBadgeLabel } from '../../data/mockData'
+import { productos as initialProductos, categorias } from '../../data/mockData'
 
 export default function Inventario() {
   const [lista, setLista] = useState(initialProductos)

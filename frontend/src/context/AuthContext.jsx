@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState } from 'react'
 import { usuariosMock } from '../data/mockData'
 
@@ -11,7 +12,8 @@ export function AuthProvider({ children }) {
       (u) => u.correo === correo && u.password === password
     )
     if (user) {
-      const { password: _, ...safeUser } = user
+      const safeUser = { ...user }
+      delete safeUser.password
       setCurrentUser(safeUser)
       return { success: true, rol: safeUser.rol }
     }

@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
-import { getBadgeClass } from '../../data/mockData'
 
 export default function ProductCard({ producto }) {
   const { addToCart } = useCart()
