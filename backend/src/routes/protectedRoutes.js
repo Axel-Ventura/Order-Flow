@@ -42,8 +42,8 @@ router.get('/admin/usuarios', verifyToken, requireRole('admin'), async (req, res
 
     const { data: usuarios, error } = await supabase
       .from('usuarios')
-      .select('id, nombre, email, activo, created_at, roles(nombre)')
-      .order('created_at', { ascending: false });
+      .select('id_usuario, nombre, correo, activo, fecha_registro, roles(nombre)')
+      .order('fecha_registro', { ascending: false });
 
     if (error) throw error;
 
@@ -68,7 +68,7 @@ router.get('/vendedor/pedidos', verifyToken, requireRole('admin', 'vendedor'), a
     const { data: pedidos, error } = await supabase
       .from('pedidos')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('fecha_pedido', { ascending: false })
       .limit(50);
 
     if (error) throw error;
@@ -95,8 +95,8 @@ router.get('/cliente/historial', verifyToken, async (req, res, next) => {
     const { data: pedidos, error } = await supabase
       .from('pedidos')
       .select('*, detalle_pedido(*)')
-      .eq('usuario_id', req.user.id)
-      .order('created_at', { ascending: false });
+      .eq('id_comprador', req.user.id)
+      .order('fecha_pedido', { ascending: false });
 
     if (error) throw error;
 

@@ -18,10 +18,18 @@ ON CONFLICT (nombre) DO NOTHING;
 -- =========================
 INSERT INTO tipos_negocio (nombre, descripcion)
 VALUES
-('alimentos', 'Negocios que venden comida, bebidas, postres o antojitos'),
-('ropa', 'Negocios que venden ropa, calzado o accesorios'),
-('electronica', 'Negocios que venden productos electrónicos'),
-('servicios', 'Negocios que ofrecen servicios')
+('Alimentos', 'Comida, bebidas, postres o antojitos'),
+('Moda', 'Ropa, calzado o accesorios de moda'),
+('Electrónica', 'Productos y componentes electrónicos'),
+('Hogar', 'Artículos para el hogar y decoración'),
+('Belleza y Salud', 'Productos de cuidado personal, salud y estética'),
+('Mascotas', 'Alimentos, accesorios y servicios para mascotas'),
+('Deportes', 'Equipamiento y accesorios deportivos'),
+('Automotriz', 'Repuestos y accesorios para vehículos'),
+('Servicios', 'Servicios profesionales y técnicos'),
+('Educación', 'Material de enseñanza, cursos y tutorías'),
+('Artesanías', 'Productos hechos a mano y tradicionales'),
+('Otros', 'Otros tipos de negocio y giros comerciales')
 ON CONFLICT (nombre) DO NOTHING;
 
 -- =========================
@@ -94,7 +102,7 @@ INSERT INTO productos (
 VALUES
 (
   (SELECT id_usuario FROM usuarios WHERE correo = 'vendedor@test.com'),
-  (SELECT id_tipo_negocio FROM tipos_negocio WHERE nombre = 'alimentos'),
+  (SELECT id_tipo_negocio FROM tipos_negocio WHERE nombre = 'Alimentos'),
   'Hamburguesa sencilla',
   'Hamburguesa con carne, queso y verduras',
   55.00,
@@ -104,7 +112,7 @@ VALUES
 ),
 (
   (SELECT id_usuario FROM usuarios WHERE correo = 'vendedor@test.com'),
-  (SELECT id_tipo_negocio FROM tipos_negocio WHERE nombre = 'alimentos'),
+  (SELECT id_tipo_negocio FROM tipos_negocio WHERE nombre = 'Alimentos'),
   'Papas a la francesa',
   'Orden de papas crujientes',
   35.00,
@@ -114,7 +122,7 @@ VALUES
 ),
 (
   (SELECT id_usuario FROM usuarios WHERE correo = 'vendedor@test.com'),
-  (SELECT id_tipo_negocio FROM tipos_negocio WHERE nombre = 'alimentos'),
+  (SELECT id_tipo_negocio FROM tipos_negocio WHERE nombre = 'Alimentos'),
   'Refresco 600ml',
   'Bebida embotellada',
   22.00,
@@ -124,7 +132,7 @@ VALUES
 ),
 (
   (SELECT id_usuario FROM usuarios WHERE correo = 'vendedor@test.com'),
-  (SELECT id_tipo_negocio FROM tipos_negocio WHERE nombre = 'alimentos'),
+  (SELECT id_tipo_negocio FROM tipos_negocio WHERE nombre = 'Alimentos'),
   'Pastel de chocolate',
   'Rebanada de pastel de chocolate',
   45.00,
