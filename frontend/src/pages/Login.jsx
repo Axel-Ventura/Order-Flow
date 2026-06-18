@@ -146,7 +146,7 @@ export default function Login() {
           <br />
           👤 Cliente: <code style={{ color: 'var(--primary-700)' }}>comprador@test.com</code> / <code style={{ color: 'var(--primary-700)' }}>123456</code>
           <br />
-          🔧 Admin: <code style={{ color: 'var(--primary-700)' }}>vendedor@test.com</code> / <code style={{ color: 'var(--primary-700)' }}>123456</code>
+          🔧 Vendedor: <code style={{ color: 'var(--primary-700)' }}>vendedor@test.com</code> / <code style={{ color: 'var(--primary-700)' }}>123456</code>
         </div>
       </div>
     </div>

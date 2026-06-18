@@ -26,7 +26,7 @@ export default function SidebarAdmin() {
         <div className="sidebar-logo-icon">O</div>
         <div>
           <span className="sidebar-logo-text">OrderFlow</span>
-          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>Admin</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>Vendedor</div>
         </div>
       </div>
 
@@ -36,8 +36,8 @@ export default function SidebarAdmin() {
             {initials}
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{currentUser?.nombre || 'Admin'}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Administrador</div>
+            <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{currentUser?.nombre || 'Vendedor'}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Vendedor</div>
           </div>
         </div>
       </div>
