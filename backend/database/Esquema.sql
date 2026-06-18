@@ -107,7 +107,7 @@ CREATE TABLE pedidos (
   id_comprador BIGINT NOT NULL,
   id_vendedor BIGINT NOT NULL,
   id_canal BIGINT NOT NULL,
-  fecha_pedido TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   estado VARCHAR(30) NOT NULL DEFAULT 'pendiente'
     CHECK (estado IN ('pendiente', 'en_proceso', 'completado', 'cancelado')),
   observaciones TEXT,

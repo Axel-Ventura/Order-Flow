@@ -71,4 +71,21 @@ router.post(
 // GET /api/auth/me  (requiere autenticación)
 router.get('/me', verifyToken, authController.me);
 
+/* ─── Roles públicos (para formulario de registro) ───── */
+
+// GET /api/auth/roles
+router.get('/roles', async (req, res, next) => {
+  try {
+    const supabase = require('../config/supabase');
+    const { data, error } = await supabase
+      .from('roles')
+      .select('id_rol, nombre, descripcion')
+      .order('id_rol');
+    if (error) throw error;
+    return res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

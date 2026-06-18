@@ -1,47 +1,77 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react'
-import { usuariosMock } from '../data/mockData'
+import { authApi } from '../services/authApi'
 
 export default function Registro() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ nombre: '', correo: '', telefono: '', password: '', confirmar: '', rol: 'cliente' })
+  const [roles, setRoles] = useState([])
+  const [form, setForm] = useState({ nombre: '', correo: '', telefono: '', password: '', confirmar: '', idRol: '' })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Cargar roles disponibles del backend
+  useEffect(() => {
+    authApi.getRoles().then((data) => {
+      setRoles(data)
+      // Seleccionar el rol "cliente" o "comprador" por defecto, prefiriendo "cliente" si ambos existen
+      const defecto = data.find((r) => r.nombre === 'cliente') || data.find((r) => r.nombre === 'comprador')
+      if (defecto) setForm((f) => ({ ...f, idRol: defecto.id_rol }))
+    }).catch(() => {
+      // Si falla, continuar sin roles (el backend usará el default)
+    })
+  }, [])
 
   const handleChange = (e) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
     setError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (form.password !== form.confirmar) {
       setError('Las contraseñas no coinciden.')
       return
     }
-    if (form.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
+    if (form.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.')
+      return
+    }
+    if (!/[A-Z]/.test(form.password)) {
+      setError('La contraseña debe contener al menos una letra mayúscula.')
+      return
+    }
+    if (!/[0-9]/.test(form.password)) {
+      setError('La contraseña debe contener al menos un número.')
       return
     }
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      // Agregar al mock para permitir inicio de sesión inmediato
-      usuariosMock.push({
-        id: 'u' + Date.now(),
-        nombre: form.nombre,
-        correo: form.correo,
+    setError('')
+    try {
+      await authApi.register({
+        nombre:   form.nombre,
+        correo:   form.correo,
         password: form.password,
-        rol: form.rol,
-        telefono: form.telefono,
-        direccion: '',
+        idRol:    form.idRol || undefined,
+        telefono: form.telefono || undefined,
       })
-      alert(`¡Cuenta creada con éxito como ${form.rol === 'admin' ? 'Vendedor' : 'Cliente'}!`)
-      navigate('/login')
-    }, 800)
+      navigate('/login', { state: { registrado: true } })
+    } catch (err) {
+      if (err.data && err.data.errors && Array.isArray(err.data.errors)) {
+        const msg = err.data.errors.map((e) => e.message).join(' | ')
+        setError(msg)
+      } else {
+        setError(err.message || 'No se pudo crear la cuenta. Intenta nuevamente.')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
+
+  // Rol seleccionado actual
+  const rolActual = roles.find((r) => r.id_rol === Number(form.idRol))?.nombre || ''
+  const esComprador = rolActual === 'comprador' || rolActual === 'cliente' || !rolActual
 
   return (
     <div className="auth-page">
@@ -108,46 +138,59 @@ export default function Registro() {
             />
           </div>
 
+          {/* Tipo de cuenta dinámico desde el backend */}
           <div className="form-group">
             <label className="form-label">Tipo de Cuenta</label>
             <div style={{ display: 'flex', gap: 12 }}>
-              <label style={{
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                padding: '10px 14px', border: '1.5px solid',
-                borderColor: form.rol === 'cliente' ? 'var(--primary-600)' : 'var(--border)',
-                borderRadius: 'var(--radius)', background: form.rol === 'cliente' ? 'var(--primary-50)' : 'var(--surface)',
-                color: form.rol === 'cliente' ? 'var(--primary-600)' : 'var(--text-secondary)',
-                fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'var(--transition)'
-              }}>
-                <input
-                  type="radio"
-                  name="rol"
-                  value="cliente"
-                  checked={form.rol === 'cliente'}
-                  onChange={handleChange}
-                  style={{ display: 'none' }}
-                />
-                👤 Comprar (Cliente)
-              </label>
-              
-              <label style={{
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                padding: '10px 14px', border: '1.5px solid',
-                borderColor: form.rol === 'admin' ? 'var(--primary-600)' : 'var(--border)',
-                borderRadius: 'var(--radius)', background: form.rol === 'admin' ? 'var(--primary-50)' : 'var(--surface)',
-                color: form.rol === 'admin' ? 'var(--primary-600)' : 'var(--text-secondary)',
-                fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'var(--transition)'
-              }}>
-                <input
-                  type="radio"
-                  name="rol"
-                  value="admin"
-                  checked={form.rol === 'admin'}
-                  onChange={handleChange}
-                  style={{ display: 'none' }}
-                />
-                💼 Vender (Vendedor)
-              </label>
+              {(() => {
+                const rolesFiltrados = []
+                const vendedorRol = roles.find((r) => r.nombre === 'vendedor')
+                const clienteRol = roles.find((r) => r.nombre === 'cliente')
+                const compradorRol = roles.find((r) => r.nombre === 'comprador')
+
+                if (clienteRol) {
+                  rolesFiltrados.push(clienteRol)
+                } else if (compradorRol) {
+                  rolesFiltrados.push(compradorRol)
+                }
+                if (vendedorRol) {
+                  rolesFiltrados.push(vendedorRol)
+                }
+
+                return rolesFiltrados.map((r) => {
+                  const seleccionado = Number(form.idRol) === r.id_rol
+                  const esVendedor = r.nombre === 'vendedor'
+                  return (
+                    <label
+                      key={r.id_rol}
+                      style={{
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        padding: '10px 14px', border: '1.5px solid',
+                        borderColor: seleccionado ? 'var(--primary-600)' : 'var(--border)',
+                        borderRadius: 'var(--radius)', background: seleccionado ? 'var(--primary-50)' : 'var(--surface)',
+                        color: seleccionado ? 'var(--primary-600)' : 'var(--text-secondary)',
+                        fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'var(--transition)'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="idRol"
+                        value={r.id_rol}
+                        checked={seleccionado}
+                        onChange={handleChange}
+                        style={{ display: 'none' }}
+                      />
+                      {esVendedor ? '💼 Vender (Vendedor)' : '👤 Comprar (Cliente)'}
+                    </label>
+                  )
+                })
+              })()}
+              {/* Fallback si aún no cargaron los roles */}
+              {roles.length === 0 && (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 0' }}>
+                  Cargando tipos de cuenta...
+                </div>
+              )}
             </div>
           </div>
 

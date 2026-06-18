@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const registrado = location.state?.registrado
 
   const [form, setForm] = useState({ correo: '', password: '', recordar: false })
   const [showPass, setShowPass] = useState(false)
@@ -18,19 +20,18 @@ export default function Login() {
     setError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-
-    setTimeout(() => {
-      const result = login(form.correo, form.password)
+    setError('')
+    try {
+      const result = await login(form.correo, form.password)
+      navigate(result.rol === 'admin' ? '/admin' : '/')
+    } catch (err) {
+      setError(err.message || 'Credenciales incorrectas')
+    } finally {
       setLoading(false)
-      if (result.success) {
-        navigate(result.rol === 'admin' ? '/admin' : '/')
-      } else {
-        setError(result.error)
-      }
-    }, 600)
+    }
   }
 
   return (
@@ -47,6 +48,16 @@ export default function Login() {
 
         <h1 className="auth-title">Bienvenido de nuevo</h1>
         <p className="auth-subtitle">Inicia sesión para continuar</p>
+
+        {registrado && (
+          <div style={{
+            background: '#d1fae5', color: '#065f46',
+            padding: '10px 14px', borderRadius: 'var(--radius)',
+            fontSize: '0.875rem', fontWeight: 500, marginBottom: 4,
+          }}>
+            ✅ ¡Cuenta creada con éxito! Ya puedes iniciar sesión.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div className="form-group">
@@ -132,22 +143,7 @@ export default function Login() {
           </Link>
         </p>
 
-        {/* Hint for development */}
-        <div style={{
-          marginTop: 20,
-          background: 'var(--gray-50)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
-          padding: '12px 14px',
-          fontSize: '0.78rem',
-          color: 'var(--text-muted)',
-        }}>
-          <strong style={{ color: 'var(--text-secondary)' }}>Cuentas de prueba:</strong>
-          <br />
-          👤 Cliente: <code style={{ color: 'var(--primary-700)' }}>comprador@test.com</code> / <code style={{ color: 'var(--primary-700)' }}>123456</code>
-          <br />
-          🔧 Vendedor: <code style={{ color: 'var(--primary-700)' }}>vendedor@test.com</code> / <code style={{ color: 'var(--primary-700)' }}>123456</code>
-        </div>
+
       </div>
     </div>
   )

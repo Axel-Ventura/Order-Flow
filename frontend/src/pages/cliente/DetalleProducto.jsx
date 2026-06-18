@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Minus, Plus, ShoppingCart } from 'lucide-react'
-import { productos } from '../../data/mockData'
+import { productosApi } from '../../services/productosApi'
+import { inferEmoji } from './Catalogo'
 import { useCart } from '../../context/CartContext'
 
 export default function DetalleProducto() {
@@ -9,10 +10,30 @@ export default function DetalleProducto() {
   const navigate = useNavigate()
   const { addToCart } = useCart()
   const [cantidad, setCantidad] = useState(1)
+  const [producto, setProducto] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const producto = productos.find((p) => p.id === id)
+  useEffect(() => {
+    productosApi.obtener(id)
+      .then((data) => setProducto({
+        id:          data.id_producto,
+        nombre:      data.nombre,
+        descripcion: data.descripcion || '',
+        precio:      parseFloat(data.precio),
+        stock:       data.stock,
+        estado:      data.estado,
+        emoji:       inferEmoji(data.nombre, data.tipos_negocio?.nombre),
+        imagen_url:  data.imagen_url,
+        vendedor:    data.usuarios?.nombre || 'Establecimiento',
+      }))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [id])
 
-  if (!producto) {
+  if (loading) return <div className="empty-state"><div className="empty-icon">⏳</div><p>Cargando producto...</p></div>
+
+  if (error || !producto) {
     return (
       <div className="empty-state">
         <div className="empty-icon">😕</div>
@@ -24,7 +45,7 @@ export default function DetalleProducto() {
     )
   }
 
-  const agotado = producto.estado === 'agotado'
+  const agotado = producto.estado === 'agotado' || producto.stock === 0
 
   const handleAgregar = () => {
     addToCart(producto, cantidad)
@@ -52,12 +73,20 @@ export default function DetalleProducto() {
             minHeight: 320,
             borderRadius: 'var(--radius-lg) 0 0 var(--radius-lg)',
           }}>
-            {producto.emoji}
+            {producto.imagen_url
+              ? <img src={producto.imagen_url} alt={producto.nombre} style={{ width: '100%', height: 320, objectFit: 'cover', borderRadius: 'var(--radius-lg) 0 0 var(--radius-lg)' }} />
+              : producto.emoji
+            }
           </div>
 
           {/* Info */}
           <div style={{ padding: '32px 28px' }}>
-            {agotado && <span className="badge badge-danger mb-4">Agotado</span>}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', background: 'var(--primary-50)', color: 'var(--primary-700)', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
+                🏬 {producto.vendedor}
+              </span>
+              {agotado && <span className="badge badge-danger" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>Agotado</span>}
+            </div>
             <h1 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: 8 }}>{producto.nombre}</h1>
             <p style={{ fontSize: '0.9rem', marginBottom: 20, lineHeight: 1.6 }}>{producto.descripcion}</p>
 

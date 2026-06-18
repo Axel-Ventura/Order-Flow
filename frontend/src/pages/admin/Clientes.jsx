@@ -1,10 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search } from 'lucide-react'
-import { clientes, getBadgeClass, getBadgeLabel, formatDate } from '../../data/mockData'
+import { clientesApi } from '../../services/clientesApi'
+import { getBadgeClass, getBadgeLabel, formatDate } from '../../data/mockData'
 
 export default function Clientes() {
+  const [clientes, setClientes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('todos')
+
+  useEffect(() => {
+    clientesApi.listar()
+      .then((data) => setClientes(data || []))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
 
   const filtered = clientes.filter((c) => {
     const matchEstado = filtroEstado === 'todos' || c.estado === filtroEstado
@@ -12,9 +23,12 @@ export default function Clientes() {
     const matchSearch = !search ||
       c.nombre.toLowerCase().includes(term) ||
       c.correo.toLowerCase().includes(term) ||
-      c.telefono.includes(term)
+      (c.telefono || '').includes(term)
     return matchEstado && matchSearch
   })
+
+  if (loading) return <div className="empty-state"><div className="empty-icon">⏳</div><p>Cargando clientes...</p></div>
+  if (error)   return <div className="empty-state"><div className="empty-icon">⚠️</div><p>Error: {error}</p></div>
 
   return (
     <div>
@@ -74,8 +88,8 @@ export default function Clientes() {
                       </div>
                     </div>
                   </td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{c.telefono}</td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{c.direccion}</td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{c.telefono || '—'}</td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{c.direccion || '—'}</td>
                   <td>
                     <span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>
                       {c.totalPedidos}
@@ -87,7 +101,7 @@ export default function Clientes() {
                     </span>
                   </td>
                   <td style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-                    {formatDate(c.fechaRegistro)}
+                    {formatDate((c.fechaRegistro || '').split('T')[0])}
                   </td>
                 </tr>
               )) : (

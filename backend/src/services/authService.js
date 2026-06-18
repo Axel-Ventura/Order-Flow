@@ -34,6 +34,18 @@ async function register({ nombre, correo, password, idRol }) {
   // 2. Hash de contraseña
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
+  // 2b. Si no se proporcionó id_rol, obtener el rol "comprador" o "cliente" por defecto
+  let rolId = idRol ? Number(idRol) : null;
+  if (!rolId) {
+    const { data: rolDefault } = await supabase
+      .from('roles')
+      .select('id_rol')
+      .in('nombre', ['comprador', 'cliente'])
+      .limit(1)
+      .maybeSingle();
+    rolId = rolDefault?.id_rol || null;
+  }
+
   // 3. Insertar usuario
   const { data: newUser, error } = await supabase
     .from('usuarios')
@@ -41,15 +53,15 @@ async function register({ nombre, correo, password, idRol }) {
       nombre,
       correo,
       password_hash: passwordHash,
-      id_rol:        idRol || null,
+      id_rol:        rolId,
       activo:        true,
     })
     .select('id_usuario, nombre, correo, id_rol, fecha_registro')
     .single();
 
   if (error) {
-    logger.error('Error al registrar usuario', { error });
-    const err = new Error('No se pudo crear el usuario.');
+    logger.error('Error al registrar usuario', { error: error?.message || error });
+    const err = new Error(error?.message || 'No se pudo crear el usuario.');
     err.statusCode = 500;
     throw err;
   }

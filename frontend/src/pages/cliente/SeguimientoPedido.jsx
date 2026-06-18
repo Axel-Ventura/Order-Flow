@@ -1,17 +1,18 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, Clock, Package, Truck, CheckCircle } from 'lucide-react'
-import { pedidos, getBadgeClass, getBadgeLabel, formatDate, formatCurrency } from '../../data/mockData'
+import { pedidosApi } from '../../services/pedidosApi'
+import { getBadgeClass, getBadgeLabel, formatDate, formatCurrency } from '../../data/mockData'
 
 const steps = [
-  { key: 'recibido',   label: 'Pedido recibido',       icon: Package,     desc: 'Tu pedido fue registrado correctamente' },
-  { key: 'preparando', label: 'Preparando tu pedido',   icon: Clock,       desc: 'Estamos preparando tus productos' },
-  { key: 'en_camino',  label: 'En camino',              icon: Truck,       desc: 'Tu pedido va en camino a tu dirección' },
-  { key: 'entregado',  label: 'Entregado',              icon: CheckCircle, desc: '¡Tu pedido fue entregado!' },
+  { key: 'pendiente',   label: 'Pedido recibido',       icon: Package,     desc: 'Tu pedido fue registrado correctamente' },
+  { key: 'en_proceso',  label: 'Preparando tu pedido',   icon: Clock,       desc: 'Estamos preparando tus productos' },
+  { key: 'completado',  label: 'Completado',             icon: CheckCircle, desc: '¡Tu pedido está completado!' },
 ]
 
 const getStepIndex = (estado) => {
   if (estado === 'cancelado') return -1
-  if (estado === 'completado') return 4
+  if (estado === 'completado') return 3
   if (estado === 'en_proceso') return 2
   if (estado === 'pendiente')  return 1
   return 0
@@ -20,10 +21,20 @@ const getStepIndex = (estado) => {
 export default function SeguimientoPedido() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [pedido, setPedido] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const pedido = pedidos.find((p) => p.id === id)
+  useEffect(() => {
+    setLoading(true)
+    pedidosApi.obtener(id)
+      .then((data) => setPedido(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [id])
 
-  if (!pedido) {
+  if (loading) return <div className="empty-state"><div className="empty-icon">⏳</div><p>Cargando pedido...</p></div>
+  if (error || !pedido) {
     return (
       <div className="empty-state">
         <div className="empty-icon">🔍</div>
@@ -52,7 +63,14 @@ export default function SeguimientoPedido() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Seguimiento del Pedido</h1>
-          <p className="page-subtitle">#{pedido.id} · {formatDate(pedido.fecha)}</p>
+          <p className="page-subtitle" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            #{pedido.id} · {formatDate(pedido.fecha?.split('T')[0] || pedido.fecha)}
+            {pedido.vendedor && (
+              <span style={{ background: 'var(--primary-100)', color: 'var(--primary-800)', padding: '2px 8px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600 }}>
+                🏬 {pedido.vendedor.nombre}
+              </span>
+            )}
+          </p>
         </div>
         <span className={`badge ${getBadgeClass(pedido.estado)}`} style={{ fontSize: '0.85rem', padding: '6px 14px' }}>
           {getBadgeLabel(pedido.estado)}
@@ -78,16 +96,16 @@ export default function SeguimientoPedido() {
               <div className="stepper">
                 {steps.map((step, index) => {
                   const isCompleted = index < currentStep
-                  const isCurrent   = index === currentStep - 1 || (currentStep === 4 && index === 3)
+                  const isCurrent   = index === currentStep - 1 || (currentStep === 3 && index === 2)
                   const Icon = step.icon
 
                   return (
                     <div
                       key={step.key}
-                      className={`stepper-item${isCompleted || (currentStep === 4 && index <= 3) ? ' completed' : ''}${isCurrent && currentStep < 4 ? ' current' : ''}`}
+                      className={`stepper-item${isCompleted || (currentStep === 3 && index <= 2) ? ' completed' : ''}${isCurrent && currentStep < 3 ? ' current' : ''}`}
                     >
                       <div className="stepper-circle">
-                        {isCompleted || currentStep === 4 ? (
+                        {isCompleted || currentStep === 3 ? (
                           <Check size={15} />
                         ) : isCurrent ? (
                           <Icon size={15} />
@@ -97,7 +115,7 @@ export default function SeguimientoPedido() {
                       </div>
                       <div className="stepper-content">
                         <div className="stepper-label" style={{
-                          color: isCompleted || (currentStep === 4) ? 'var(--success)' :
+                          color: isCompleted || (currentStep === 3) ? 'var(--success)' :
                                  isCurrent ? 'var(--primary-600)' : 'var(--text-muted)',
                         }}>
                           {step.label}
@@ -129,16 +147,16 @@ export default function SeguimientoPedido() {
               <span className="card-title">Productos</span>
             </div>
             <div className="card-body" style={{ padding: '8px 20px' }}>
-              {pedido.productos.map(({ producto, cantidad, subtotal }, i) => (
+              {(pedido.productos || []).map(({ producto, cantidad, precio_unitario, subtotal }, i) => (
                 <div key={i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   padding: '10px 0', borderBottom: i < pedido.productos.length - 1 ? '1px solid var(--border)' : 'none',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: '1.4rem' }}>{producto.emoji}</span>
+                    <span style={{ fontSize: '1.4rem' }}>🛒</span>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{producto.nombre}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>x{cantidad}</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>x{cantidad} · {formatCurrency(precio_unitario)}</div>
                     </div>
                   </div>
                   <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{formatCurrency(subtotal)}</div>
@@ -150,14 +168,6 @@ export default function SeguimientoPedido() {
           <div className="card">
             <div className="card-body">
               <div className="summary-box">
-                <div className="summary-row">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(pedido.total - 25)}</span>
-                </div>
-                <div className="summary-row">
-                  <span>Envío</span>
-                  <span>{formatCurrency(25)}</span>
-                </div>
                 <div className="summary-row total">
                   <span>Total</span>
                   <span>{formatCurrency(pedido.total)}</span>

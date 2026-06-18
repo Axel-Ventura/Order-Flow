@@ -78,4 +78,27 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { verifyToken, requireRole };
+/**
+ * optionallyVerifyToken — Intenta extraer y validar el token si está presente,
+ * sin lanzar error si no existe o es inválido.
+ */
+function optionallyVerifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const payload = tokenService.verifyAccessToken(token);
+      req.user = {
+        id:    payload.sub,
+        email: payload.email,
+        role:  payload.role,
+      };
+    } catch (err) {
+      // Silenciar errores de token
+    }
+  }
+  next();
+}
+
+module.exports = { verifyToken, requireRole, optionallyVerifyToken };
