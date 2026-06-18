@@ -1,44 +1,55 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
+import { Mail, Lock, Box } from "lucide-react";
 
 function Login() {
-  const navigate = useNavigate()
-  const [rol, setRol] = useState('comprador')
-
-  const iniciarSesion = (e) => {
-    e.preventDefault()
-
-    localStorage.setItem('auth', 'true')
-    localStorage.setItem('rol', rol)
-
-    if (rol === 'comprador') {
-      navigate('/catalogo')
-    } else {
-      navigate('/dashboard')
-    }
-  }
+  const navigate = useNavigate();
 
   return (
-    <div>
-      <h2>Iniciar Sesión</h2>
+    <main className="login-page">
+      <div className="login-logo">
+        <Box size={30} />
+      </div>
 
-      <form onSubmit={iniciarSesion}>
-        <input type="email" placeholder="Correo electrónico" required />
-        <br /><br />
+      <h1>Inicia sesión</h1>
 
-        <input type="password" placeholder="Contraseña" required />
-        <br /><br />
+      <p className="register-text">
+        ¿No tienes una cuenta? <a href="#registro">Regístrate aquí</a>
+      </p>
 
-        <select value={rol} onChange={(e) => setRol(e.target.value)}>
-          <option value="comprador">Comprador</option>
-          <option value="vendedor">Vendedor</option>
-        </select>
-        <br /><br />
+      <form
+        className="login-card"
+        onSubmit={(event) => {
+          event.preventDefault();
+          navigate("/catalogo");
+        }}
+      >
+        <label>Correo electrónico</label>
+        <div className="login-input">
+          <Mail size={24} />
+          <input type="email" placeholder="tu@correo.com" />
+        </div>
 
-        <button type="submit">Iniciar sesión</button>
+        <label>Contraseña</label>
+        <div className="login-input">
+          <Lock size={24} />
+          <input type="password" placeholder="••••••••" />
+        </div>
+
+        <div className="login-options">
+          <label className="remember">
+            <input type="checkbox" />
+            <span>Recordarme</span>
+          </label>
+
+          <a href="#recuperar">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button className="login-btn" type="submit">
+          Iniciar Sesión
+        </button>
       </form>
-    </div>
-  )
+    </main>
+  );
 }
 
-export default Login
+export default Login;

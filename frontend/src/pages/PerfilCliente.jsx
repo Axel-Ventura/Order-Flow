@@ -1,23 +1,63 @@
+import LayoutCliente from "../components/LayoutCliente";
+import { User, Mail, Phone, MapPin } from "lucide-react";
+
 function PerfilCliente() {
   return (
-    <div>
-      <h2>Perfil del Usuario</h2>
+    <LayoutCliente>
+      <div className="page-title">
+        <div className="title-icon">
+          <User size={24} />
+        </div>
+        <h1>Mi Perfil</h1>
+      </div>
 
-      <input type="text" placeholder="Nombre" />
-      <br /><br />
+      <div className="profile-card">
+        <div className="profile-banner"></div>
 
-      <input type="text" placeholder="Teléfono" />
-      <br /><br />
+        <div className="profile-content">
+          <div className="profile-avatar"></div>
 
-      <input type="text" placeholder="Dirección" />
-      <br /><br />
+          <button className="edit-btn">
+            Editar Perfil
+          </button>
 
-      <input type="password" placeholder="Nueva contraseña" />
-      <br /><br />
+          <div className="profile-grid">
+            <div className="field">
+              <label>Nombre completo</label>
+              <div className="input-view">
+                <User size={18} />
+                María García
+              </div>
+            </div>
 
-      <button>Guardar cambios</button>
-    </div>
-  )
+            <div className="field">
+              <label>Correo electrónico</label>
+              <div className="input-view">
+                <Mail size={18} />
+                maria.garcia@example.com
+              </div>
+            </div>
+
+            <div className="field">
+              <label>Número telefónico</label>
+              <div className="input-view">
+                <Phone size={18} />
+                +52 55 1234 5678
+              </div>
+            </div>
+
+            <div className="field full">
+              <label>Dirección de entrega</label>
+              <div className="input-view">
+                <MapPin size={18} />
+                Av. Paseo de la Reforma 222, CDMX
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </LayoutCliente>
+  );
 }
 
-export default PerfilCliente
+export default PerfilCliente;
