@@ -1,54 +1,113 @@
+/**
+ * app.js — Configuración principal de la aplicación Express
+ * Seguridad, middlewares globales y montaje de rutas.
+ */
 const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+const helmet  = require('helmet');
+const cors    = require('cors');
+const morgan  = require('morgan');
+
+// Config debe cargarse primero (valida variables de entorno)
+const { ALLOWED_ORIGINS, NODE_ENV } = require('./config/env');
+const apiRoutes    = require('./routes');
+const errorHandler = require('./middlewares/errorHandler');
+const logger       = require('./utils/logger');
 
 const app = express();
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+/* ════════════════════════════════════════════════════
+   1. SEGURIDAD — Helmet (HTTP security headers)
+════════════════════════════════════════════════════ */
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc:  ["'self'"],
+      styleSrc:   ["'self'"],
+      imgSrc:     ["'self'", 'data:'],
+    },
+  },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
-// Basic Routes
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to OrderFlow API' });
-});
+/* ════════════════════════════════════════════════════
+   2. CORS — Solo orígenes autorizados desde .env
+════════════════════════════════════════════════════ */
+const corsOptions = {
+  origin(origin, callback) {
+    // Permitir peticiones sin origen (Postman, curl, server-to-server)
+    if (!origin) return callback(null, true);
 
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
-});
-
-// Route to test Supabase connection
-app.get('/api/test-supabase', async (req, res, next) => {
-  try {
-    const supabase = require('./config/supabase');
-    const { data, error } = await supabase.from('_connection_test_').select('*').limit(1);
-    
-    // PGRST205 is "table not found", meaning connection works but table does not exist
-    if (error && error.code !== 'PGRST205') {
-      return res.status(500).json({
-        status: 'error',
-        message: 'Error al conectar con Supabase',
-        error: error
-      });
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
     }
-    
-    res.json({
-      status: 'success',
-      message: 'Conexión a Supabase establecida correctamente',
-      details: error ? error.message : 'Tabla consultada con éxito',
-      data: data || []
-    });
-  } catch (err) {
-    next(err);
-  }
+
+    logger.warn('Petición CORS bloqueada desde origen no autorizado', { origin });
+    callback(new Error(`CORS: Origen no autorizado: ${origin}`));
+  },
+  credentials:     true,
+  methods:         ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders:  ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders:  ['X-Total-Count'],
+  maxAge:          86400, // 24h preflight cache
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Preflight para todas las rutas
+
+/* ════════════════════════════════════════════════════
+   3. PARSERS
+════════════════════════════════════════════════════ */
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+/* ════════════════════════════════════════════════════
+   4. HTTP REQUEST LOGGING (Morgan)
+════════════════════════════════════════════════════ */
+const morganFormat = NODE_ENV === 'production'
+  ? 'combined'   // IP, user-agent, referrer para producción
+  : 'dev';       // Coloreado y compacto para desarrollo
+
+app.use(morgan(morganFormat, {
+  // Silenciar logs de health check en producción
+  skip: (req) => NODE_ENV === 'production' && req.path === '/api/health',
+  stream: {
+    write: (message) => logger.info(message.trim()),
+  },
+}));
+
+/* ════════════════════════════════════════════════════
+   5. RUTAS PRINCIPALES
+════════════════════════════════════════════════════ */
+
+// Ruta raíz — bienvenida
+app.get('/', (req, res) => {
+  res.json({
+    success:  true,
+    message:  'OrderFlow API v1.0 — Bienvenido',
+    docs:     '/api/health',
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+// Montaje de la API
+app.use('/api', apiRoutes);
+
+/* ════════════════════════════════════════════════════
+   6. 404 GLOBAL (rutas fuera de /api)
+════════════════════════════════════════════════════ */
+app.use((req, res) => {
+  res.status(404).json({
+    success:   false,
+    message:   `Recurso no encontrado: ${req.method} ${req.originalUrl}`,
+    timestamp: new Date().toISOString(),
+  });
 });
+
+/* ════════════════════════════════════════════════════
+   7. MANEJO CENTRALIZADO DE ERRORES
+   IMPORTANTE: Debe ser el ÚLTIMO middleware
+════════════════════════════════════════════════════ */
+app.use(errorHandler);
 
 module.exports = app;
