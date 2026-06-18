@@ -2,25 +2,60 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
+import { useAuth } from '../../context/AuthContext'
+import { pedidosApi } from '../../services/pedidosApi'
 import { formatCurrency } from '../../data/mockData'
 
 export default function MiPedido() {
   const { items, removeFromCart, updateQty, clearCart, subtotal, envio, total } = useCart()
+  const { currentUser } = useAuth()
   const navigate = useNavigate()
   const [instrucciones, setInstrucciones] = useState('')
   const [confirmado, setConfirmado] = useState(false)
+  const [pedidoId, setPedidoId] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleConfirmar = async () => {
+    if (items.length === 0) return
+    setLoading(true)
+    setError('')
+    try {
+      const payload = {
+        items: items.map(({ producto, cantidad }) => ({
+          id_producto:     producto.id,
+          cantidad,
+          precio_unitario: producto.precio,
+        })),
+        observaciones: instrucciones || undefined,
+      }
+      const data = await pedidosApi.crear(payload)
+      clearCart()
+      setPedidoId(data.id_pedido)
+      setConfirmado(true)
+    } catch (err) {
+      setError(err.message || 'No se pudo crear el pedido. Intenta nuevamente.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (confirmado) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', gap: 16 }}>
         <div style={{ fontSize: '4rem' }}>✅</div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>¡Pedido confirmado!</h2>
+        {pedidoId && (
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            Número de pedido: <strong style={{ color: 'var(--primary-600)' }}>#{pedidoId}</strong>
+          </p>
+        )}
         <p>Tu pedido ha sido recibido y está siendo procesado.</p>
         <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
           <button className="btn btn-secondary" onClick={() => navigate('/history')}>
             Ver mis pedidos
           </button>
-          <button className="btn btn-primary" onClick={() => { clearCart(); navigate('/'); }}>
+          <button className="btn btn-primary" onClick={() => navigate('/')}>
             Seguir comprando
           </button>
         </div>
@@ -71,9 +106,12 @@ export default function MiPedido() {
           <div className="card-body" style={{ padding: '8px 20px' }}>
             {items.map(({ producto, cantidad }) => (
               <div key={producto.id} className="cart-item">
-                <div className="cart-item-img">{producto.emoji}</div>
+                <div className="cart-item-img">{producto.emoji || '🍽️'}</div>
                 <div className="cart-item-info">
                   <div className="cart-item-name">{producto.nombre}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--primary-600)', fontWeight: 500, marginBottom: 2 }}>
+                    🏬 {producto.vendedor}
+                  </div>
                   <div className="cart-item-price">${producto.precio.toFixed(2)} c/u</div>
                 </div>
                 <div className="qty-control">
@@ -137,12 +175,22 @@ export default function MiPedido() {
                 </div>
               </div>
 
+              {error && (
+                <div style={{
+                  marginTop: 12, background: 'var(--danger-light)', color: '#991b1b',
+                  padding: '10px 14px', borderRadius: 'var(--radius)', fontSize: '0.875rem',
+                }}>
+                  {error}
+                </div>
+              )}
+
               <button
                 className="btn btn-primary btn-full btn-lg"
                 style={{ marginTop: 16 }}
-                onClick={() => setConfirmado(true)}
+                onClick={handleConfirmar}
+                disabled={loading}
               >
-                Confirmar Pedido
+                {loading ? 'Procesando...' : 'Confirmar Pedido'}
               </button>
             </div>
           </div>

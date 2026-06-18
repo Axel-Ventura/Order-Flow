@@ -1,15 +1,27 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye } from 'lucide-react'
-import { pedidos, getBadgeClass, getBadgeLabel, formatDate, formatCurrency } from '../../data/mockData'
-import { useAuth } from '../../context/AuthContext'
+import { pedidosApi } from '../../services/pedidosApi'
+import { getBadgeClass, getBadgeLabel, formatDate, formatCurrency } from '../../data/mockData'
 
 export default function HistorialPedidos() {
   const navigate = useNavigate()
-  const { currentUser } = useAuth()
+  const [pedidos, setPedidos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Show only orders for the current client
-  const misPedidos = pedidos.filter((p) =>
-    p.cliente.correo === currentUser?.correo
+  useEffect(() => {
+    pedidosApi.listar()
+      .then((data) => setPedidos(data || []))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div className="empty-state"><div className="empty-icon">⏳</div><p>Cargando pedidos...</p></div>
+  )
+  if (error) return (
+    <div className="empty-state"><div className="empty-icon">⚠️</div><p>Error: {error}</p></div>
   )
 
   return (
@@ -21,7 +33,7 @@ export default function HistorialPedidos() {
         </div>
       </div>
 
-      {misPedidos.length === 0 ? (
+      {pedidos.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📋</div>
           <h3 style={{ color: 'var(--text-secondary)' }}>Aún no tienes pedidos</h3>
@@ -38,6 +50,7 @@ export default function HistorialPedidos() {
                 <tr>
                   <th>Pedido</th>
                   <th>Fecha</th>
+                  <th>Establecimiento</th>
                   <th>Productos</th>
                   <th>Total</th>
                   <th>Estado</th>
@@ -45,17 +58,22 @@ export default function HistorialPedidos() {
                 </tr>
               </thead>
               <tbody>
-                {misPedidos.map((pedido) => (
+                {pedidos.map((pedido) => (
                   <tr key={pedido.id}>
                     <td>
                       <span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>#{pedido.id}</span>
                     </td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{formatDate(pedido.fecha)}</td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{formatDate(pedido.fecha?.split('T')[0] || pedido.fecha)}</td>
+                    <td>
+                      <span style={{ fontSize: '0.8rem', background: 'var(--primary-50)', color: 'var(--primary-700)', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
+                        🏬 {pedido.vendedor?.nombre || 'Establecimiento'}
+                      </span>
+                    </td>
                     <td>
                       <div style={{ fontSize: '0.82rem' }}>
-                        {pedido.productos.map((dp, i) => (
+                        {(pedido.productos || []).map((dp, i) => (
                           <div key={i}>
-                            {dp.cantidad}× {dp.producto.nombre}
+                            {dp.cantidad}× {dp.producto?.nombre}
                           </div>
                         ))}
                       </div>
@@ -80,45 +98,6 @@ export default function HistorialPedidos() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* Demo: show all orders as example */}
-      {misPedidos.length === 0 && (
-        <div style={{ marginTop: 24 }}>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-            Ejemplo de cómo se verá tu historial:
-          </p>
-          <div className="card">
-            <div className="table-wrapper">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Pedido</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pedidos.slice(0, 3).map((p) => (
-                    <tr key={p.id}>
-                      <td><span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>#{p.id}</span></td>
-                      <td style={{ color: 'var(--text-secondary)' }}>{formatDate(p.fecha)}</td>
-                      <td style={{ fontWeight: 600 }}>{formatCurrency(p.total)}</td>
-                      <td><span className={`badge ${getBadgeClass(p.estado)}`}>{getBadgeLabel(p.estado)}</span></td>
-                      <td>
-                        <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/tracking/${p.id}`)}>
-                          <Eye size={14} /> Ver
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
       )}

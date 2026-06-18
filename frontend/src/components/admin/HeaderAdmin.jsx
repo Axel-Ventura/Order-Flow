@@ -1,4 +1,3 @@
-import { Bell } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 export default function HeaderAdmin({ title, subtitle }) {
@@ -15,9 +14,6 @@ export default function HeaderAdmin({ title, subtitle }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <button className="btn-ghost btn" style={{ borderRadius: 'var(--radius-full)' }}>
-          <Bell size={18} />
-        </button>
         <div className="avatar" style={{ background: 'var(--primary-700)', color: 'white', fontSize: '0.8rem' }}>
           {initials}
         </div>

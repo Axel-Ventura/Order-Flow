@@ -20,11 +20,16 @@ export default function ProductCard({ producto }) {
       </div>
 
       <div className="product-card-body">
-        {agotado && (
-          <span className={`badge badge-danger`} style={{ marginBottom: 8, fontSize: '0.7rem' }}>
-            Agotado
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
+          <span style={{ fontSize: '0.7rem', background: 'var(--primary-50)', color: 'var(--primary-700)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>
+            🏬 {producto.vendedor}
           </span>
-        )}
+          {agotado && (
+            <span className="badge badge-danger" style={{ fontSize: '0.65rem', padding: '2px 6px' }}>
+              Agotado
+            </span>
+          )}
+        </div>
         <div
           className="product-card-name"
           style={{ cursor: 'pointer' }}

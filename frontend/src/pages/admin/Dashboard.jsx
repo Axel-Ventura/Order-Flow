@@ -1,54 +1,39 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ShoppingBag, DollarSign, Users, Clock, TrendingUp, ArrowRight } from 'lucide-react'
-import { pedidos, estadisticasDashboard, productos, getBadgeClass, getBadgeLabel, formatDate, formatCurrency } from '../../data/mockData'
-
-const stats = [
-  {
-    label: 'Total Pedidos',
-    value: estadisticasDashboard.totalPedidos,
-    change: estadisticasDashboard.cambiosPedidos,
-    icon: ShoppingBag,
-    color: '#4f46e5',
-    bg: '#eef2ff',
-  },
-  {
-    label: 'Ingresos (mes)',
-    value: formatCurrency(estadisticasDashboard.ingresosMes),
-    change: estadisticasDashboard.cambiosIngresos,
-    icon: DollarSign,
-    color: '#10b981',
-    bg: '#d1fae5',
-  },
-  {
-    label: 'Clientes',
-    value: estadisticasDashboard.totalClientes,
-    change: estadisticasDashboard.cambiosClientes,
-    icon: Users,
-    color: '#f59e0b',
-    bg: '#fef3c7',
-  },
-  {
-    label: 'Pendientes',
-    value: estadisticasDashboard.pedidosPendientes,
-    change: estadisticasDashboard.cambiosPendientes,
-    icon: Clock,
-    color: '#ef4444',
-    bg: '#fee2e2',
-  },
-]
+import { statsApi } from '../../services/statsApi'
+import { getBadgeClass, getBadgeLabel, formatDate, formatCurrency } from '../../data/mockData'
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const topProductos = [...productos]
-    .filter(p => p.estado === 'disponible')
-    .slice(0, 4)
+  useEffect(() => {
+    statsApi.dashboard()
+      .then(setStats)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const statCards = stats
+    ? [
+        { label: 'Total Pedidos',   value: stats.totalPedidos,      change: stats.cambiosPedidos,   icon: ShoppingBag, color: '#4f46e5', bg: '#eef2ff' },
+        { label: 'Ingresos (mes)',  value: formatCurrency(stats.ingresosMes), change: stats.cambiosIngresos,  icon: DollarSign,  color: '#10b981', bg: '#d1fae5' },
+        { label: 'Clientes',        value: stats.totalClientes,     change: stats.cambiosClientes,  icon: Users,       color: '#f59e0b', bg: '#fef3c7' },
+        { label: 'Pendientes',      value: stats.pedidosPendientes, change: stats.cambiosPendientes, icon: Clock,       color: '#ef4444', bg: '#fee2e2' },
+      ]
+    : []
+
+  if (loading) return (
+    <div className="empty-state"><div className="empty-icon">⏳</div><p>Cargando estadísticas...</p></div>
+  )
 
   return (
     <div>
       {/* Stats */}
       <div className="stats-grid">
-        {stats.map((s) => {
+        {statCards.map((s) => {
           const Icon = s.icon
           const isUp = s.change?.startsWith('+')
           return (
@@ -94,7 +79,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {pedidos.slice(0, 5).map((p) => (
+                {(stats?.pedidosRecientes || []).map((p) => (
                   <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/pedidos')}>
                     <td>
                       <span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>#{p.id}</span>
@@ -102,9 +87,9 @@ export default function Dashboard() {
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div className="avatar" style={{ width: 28, height: 28, fontSize: '0.7rem' }}>
-                          {p.cliente.nombre.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          {(p.cliente?.nombre || 'U').split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
-                        <span style={{ fontSize: '0.875rem' }}>{p.cliente.nombre}</span>
+                        <span style={{ fontSize: '0.875rem' }}>{p.cliente?.nombre || '—'}</span>
                       </div>
                     </td>
                     <td style={{ fontWeight: 600 }}>{formatCurrency(p.total)}</td>
@@ -114,43 +99,41 @@ export default function Dashboard() {
                       </span>
                     </td>
                     <td style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-                      {formatDate(p.fecha)}
+                      {formatDate((p.fecha || '').split('T')[0])}
                     </td>
                   </tr>
                 ))}
+                {(stats?.pedidosRecientes || []).length === 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
+                      No hay pedidos aún
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Top productos */}
+        {/* Resumen rápido */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">Top productos</span>
+            <span className="card-title">Resumen rápido</span>
           </div>
           <div className="card-body" style={{ padding: '8px 16px' }}>
-            {topProductos.map((p, i) => (
-              <div key={p.id} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 0',
-                borderBottom: i < topProductos.length - 1 ? '1px solid var(--border)' : 'none',
+            {[
+              { label: 'Pedidos totales',    value: stats?.totalPedidos || 0 },
+              { label: 'Ingresos del mes',   value: formatCurrency(stats?.ingresosMes || 0) },
+              { label: 'Clientes activos',   value: stats?.totalClientes || 0 },
+              { label: 'Por procesar',       value: stats?.pedidosPendientes || 0 },
+            ].map((item, i, arr) => (
+              <div key={item.label} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '12px 0',
+                borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
               }}>
-                <div style={{
-                  width: 32, height: 32,
-                  background: 'var(--primary-50)',
-                  borderRadius: 'var(--radius)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.2rem', flexShrink: 0,
-                }}>
-                  {p.emoji}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{p.nombre}</div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Stock: {p.stock}</div>
-                </div>
-                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--primary-600)' }}>
-                  ${p.precio.toFixed(2)}
-                </div>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{item.label}</span>
+                <span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>{item.value}</span>
               </div>
             ))}
           </div>
