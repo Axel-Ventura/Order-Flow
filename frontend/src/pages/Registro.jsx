@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react'
+import { usuariosMock } from '../data/mockData'
 
 export default function Registro() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ nombre: '', correo: '', telefono: '', password: '', confirmar: '' })
+  const [form, setForm] = useState({ nombre: '', correo: '', telefono: '', password: '', confirmar: '', rol: 'cliente' })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -27,6 +28,17 @@ export default function Registro() {
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
+      // Agregar al mock para permitir inicio de sesión inmediato
+      usuariosMock.push({
+        id: 'u' + Date.now(),
+        nombre: form.nombre,
+        correo: form.correo,
+        password: form.password,
+        rol: form.rol,
+        telefono: form.telefono,
+        direccion: '',
+      })
+      alert(`¡Cuenta creada con éxito como ${form.rol === 'admin' ? 'Vendedor' : 'Cliente'}!`)
       navigate('/login')
     }, 800)
   }
@@ -94,6 +106,49 @@ export default function Registro() {
               value={form.telefono}
               onChange={handleChange}
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Tipo de Cuenta</label>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <label style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '10px 14px', border: '1.5px solid',
+                borderColor: form.rol === 'cliente' ? 'var(--primary-600)' : 'var(--border)',
+                borderRadius: 'var(--radius)', background: form.rol === 'cliente' ? 'var(--primary-50)' : 'var(--surface)',
+                color: form.rol === 'cliente' ? 'var(--primary-600)' : 'var(--text-secondary)',
+                fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'var(--transition)'
+              }}>
+                <input
+                  type="radio"
+                  name="rol"
+                  value="cliente"
+                  checked={form.rol === 'cliente'}
+                  onChange={handleChange}
+                  style={{ display: 'none' }}
+                />
+                👤 Comprar (Cliente)
+              </label>
+              
+              <label style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '10px 14px', border: '1.5px solid',
+                borderColor: form.rol === 'admin' ? 'var(--primary-600)' : 'var(--border)',
+                borderRadius: 'var(--radius)', background: form.rol === 'admin' ? 'var(--primary-50)' : 'var(--surface)',
+                color: form.rol === 'admin' ? 'var(--primary-600)' : 'var(--text-secondary)',
+                fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'var(--transition)'
+              }}>
+                <input
+                  type="radio"
+                  name="rol"
+                  value="admin"
+                  checked={form.rol === 'admin'}
+                  onChange={handleChange}
+                  style={{ display: 'none' }}
+                />
+                💼 Vender (Vendedor)
+              </label>
+            </div>
           </div>
 
           <div className="form-group">
