@@ -1,13 +1,15 @@
+/**
+ * Cliente Supabase con SERVICE ROLE KEY para operaciones de backend privilegiadas.
+ * Nunca exponer esta key al cliente.
+ */
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const { SUPABASE_URL, SUPABASE_SERVICE_KEY } = require('./env');
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Supabase URL y Key son requeridas en las variables de entorno.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession:   false,
+  },
+});
 
 module.exports = supabase;
