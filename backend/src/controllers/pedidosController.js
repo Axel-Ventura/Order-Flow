@@ -35,12 +35,15 @@ async function listar(req, res, next) {
       `)
       .order('fecha_pedido', { ascending: false });
 
-    // Solo los clientes/compradores ven únicamente sus propios pedidos
-    // Los vendedores y admins ven todos los pedidos
+    // Clientes/compradores: solo sus propios pedidos
+    // Vendedores: solo los pedidos donde ellos son el vendedor
+    // Admin: todos los pedidos
     if (role === 'comprador' || role === 'cliente') {
       query = query.eq('id_comprador', Number(id));
+    } else if (role === 'vendedor') {
+      query = query.eq('id_vendedor', Number(id));
     }
-    // vendedor / admin → sin filtro, ven todos
+    // admin → sin filtro adicional, ve todo
 
     if (filtroEstado && filtroEstado !== 'todos') {
       query = query.eq('estado', filtroEstado);

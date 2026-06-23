@@ -7,23 +7,28 @@ const { success } = require('../utils/response');
 
 async function dashboard(req, res, next) {
   try {
-    // 1. Total pedidos
+    const idVendedor = req.user.id;
+
+    // 1. Total pedidos del vendedor autenticado
     const { count: totalPedidos } = await supabase
       .from('pedidos')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .eq('id_vendedor', idVendedor);
 
-    // 2. Pedidos pendientes
+    // 2. Pedidos pendientes del vendedor autenticado
     const { count: pedidosPendientes } = await supabase
       .from('pedidos')
       .select('*', { count: 'exact', head: true })
+      .eq('id_vendedor', idVendedor)
       .in('estado', ['pendiente', 'en_proceso']);
 
-    // 3. Ingresos del mes actual
+    // 3. Ingresos del mes actual del vendedor autenticado
     const now = new Date();
     const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const { data: pedidosMes } = await supabase
       .from('pedidos')
       .select('total')
+      .eq('id_vendedor', idVendedor)
       .gte('fecha_pedido', inicioMes)
       .in('estado', ['completado', 'entregado']);
 
@@ -32,26 +37,21 @@ async function dashboard(req, res, next) {
       0
     );
 
-    // 4. Total clientes (compradores)
-    const { data: roles } = await supabase
-      .from('roles')
-      .select('id_rol')
-      .in('nombre', ['comprador', 'cliente']);
+    // 4. Total clientes que han comprado al vendedor autenticado
+    const { data: compradoresData } = await supabase
+      .from('pedidos')
+      .select('id_comprador')
+      .eq('id_vendedor', idVendedor);
 
-    const roleIds = (roles || []).map((r) => r.id_rol);
-    let totalClientes = 0;
-    if (roleIds.length > 0) {
-      const { count } = await supabase
-        .from('usuarios')
-        .select('*', { count: 'exact', head: true })
-        .in('id_rol', roleIds);
-      totalClientes = count || 0;
-    }
+    const totalClientes = new Set(
+      (compradoresData || []).map((p) => p.id_comprador).filter(Boolean)
+    ).size;
 
-    // 5. Últimos 6 pedidos para reporte mensual (simplificado)
+    // 5. Últimos 5 pedidos del vendedor autenticado
     const { data: pedidosRecientes } = await supabase
       .from('pedidos')
       .select('id_pedido, estado, total, fecha_pedido, observaciones, id_canal, canales_venta(nombre), usuarios!fk_pedido_comprador(nombre, correo), detalle_pedido(cantidad, precio_unitario, productos(nombre))')
+      .eq('id_vendedor', idVendedor)
       .order('fecha_pedido', { ascending: false })
       .limit(5);
 
