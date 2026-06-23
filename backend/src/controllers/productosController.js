@@ -149,7 +149,43 @@ async function actualizar(req, res, next) {
 async function eliminar(req, res, next) {
   try {
     const { id } = req.params;
+    const idVendedor = req.user.id;
 
+    // 1. Verificar que el producto existe y pertenece al vendedor autenticado
+    const { data: producto, error: findErr } = await supabase
+      .from('productos')
+      .select('id_producto, nombre, id_vendedor')
+      .eq('id_producto', id)
+      .maybeSingle();
+
+    if (findErr) throw findErr;
+    if (!producto) {
+      const e = new Error('Producto no encontrado.');
+      e.statusCode = 404;
+      throw e;
+    }
+
+    if (String(producto.id_vendedor) !== String(idVendedor)) {
+      const e = new Error('No tienes permiso para eliminar este producto.');
+      e.statusCode = 403;
+      throw e;
+    }
+
+    // 2. Verificar si el producto está referenciado en algún pedido
+    const { count: pedidosConProducto } = await supabase
+      .from('detalle_pedido')
+      .select('*', { count: 'exact', head: true })
+      .eq('id_producto', id);
+
+    if (pedidosConProducto > 0) {
+      const e = new Error(
+        `No se puede eliminar "${producto.nombre}" porque está en ${pedidosConProducto} pedido(s). Puedes marcarlo como "agotado" en su lugar.`
+      );
+      e.statusCode = 409;
+      throw e;
+    }
+
+    // 3. Eliminar el producto
     const { error: err } = await supabase
       .from('productos')
       .delete()
@@ -157,8 +193,8 @@ async function eliminar(req, res, next) {
 
     if (err) throw err;
 
-    logger.info('Producto eliminado', { id });
-    return success(res, { message: 'Producto eliminado.' });
+    logger.info('Producto eliminado', { id, nombre: producto.nombre });
+    return success(res, { message: `Producto "${producto.nombre}" eliminado correctamente.` });
   } catch (err) {
     next(err);
   }

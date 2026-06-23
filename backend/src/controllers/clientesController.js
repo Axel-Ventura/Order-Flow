@@ -8,49 +8,56 @@ const { success } = require('../utils/response');
 /* ─── GET /api/clientes ──────────────────────────────── */
 async function listar(req, res, next) {
   try {
-    const { data: roles } = await supabase
-      .from('roles')
-      .select('id_rol')
-      .in('nombre', ['comprador', 'cliente']);
+    const idVendedor = req.user.id;
 
-    const roleIds = (roles || []).map((r) => r.id_rol);
+    // 1. Obtener los pedidos del vendedor autenticado para conocer sus compradores únicos
+    const { data: pedidosVendedor, error: pedErr } = await supabase
+      .from('pedidos')
+      .select('id_comprador')
+      .eq('id_vendedor', idVendedor);
 
-    let query = supabase
+    if (pedErr) throw pedErr;
+
+    // Si el vendedor no tiene pedidos aún, no hay clientes que mostrar
+    const compradorIds = [
+      ...new Set((pedidosVendedor || []).map((p) => p.id_comprador).filter(Boolean))
+    ];
+
+    if (compradorIds.length === 0) {
+      return success(res, { data: [] });
+    }
+
+    // 2. Obtener el detalle de esos compradores
+    const { data, error: err } = await supabase
       .from('usuarios')
       .select('id_usuario, nombre, correo, telefono, direccion, activo, fecha_registro, roles(nombre)')
+      .in('id_usuario', compradorIds)
       .order('fecha_registro', { ascending: false });
 
-    if (roleIds.length > 0) {
-      query = query.in('id_rol', roleIds);
-    }
-
-    const { data, error: err } = await query;
     if (err) throw err;
 
-    // Contar pedidos por cliente
-    const clientIds = (data || []).map((u) => u.id_usuario);
-    let pedidosCount = {};
-    if (clientIds.length > 0) {
-      const { data: pedidos } = await supabase
-        .from('pedidos')
-        .select('id_comprador')
-        .in('id_comprador', clientIds);
+    // 3. Contar cuántos pedidos tiene cada cliente CON ESTE vendedor
+    const { data: pedidosCount } = await supabase
+      .from('pedidos')
+      .select('id_comprador')
+      .eq('id_vendedor', idVendedor)
+      .in('id_comprador', compradorIds);
 
-      (pedidos || []).forEach((p) => {
-        pedidosCount[p.id_comprador] = (pedidosCount[p.id_comprador] || 0) + 1;
-      });
-    }
+    const countMap = {};
+    (pedidosCount || []).forEach((p) => {
+      countMap[p.id_comprador] = (countMap[p.id_comprador] || 0) + 1;
+    });
 
     const clientes = (data || []).map((u) => ({
-      id:             u.id_usuario,
-      nombre:         u.nombre,
-      correo:         u.correo,
-      telefono:       u.telefono || '',
-      direccion:      u.direccion || '',
-      estado:         u.activo ? 'activo' : 'inactivo',
-      fechaRegistro:  u.fecha_registro,
-      totalPedidos:   pedidosCount[u.id_usuario] || 0,
-      rol:            u.roles?.nombre || 'cliente',
+      id:            u.id_usuario,
+      nombre:        u.nombre,
+      correo:        u.correo,
+      telefono:      u.telefono || '',
+      direccion:     u.direccion || '',
+      estado:        u.activo ? 'activo' : 'inactivo',
+      fechaRegistro: u.fecha_registro,
+      totalPedidos:  countMap[u.id_usuario] || 0,
+      rol:           u.roles?.nombre || 'cliente',
     }));
 
     return success(res, { data: clientes });

@@ -8,7 +8,9 @@
  * - Lanza errores con el mensaje del backend
  */
 
-const BASE_URL = '/api';
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
 
 /* ─── Token helpers ─────────────────────────────────── */
 export function getAccessToken() {
