@@ -1,13 +1,22 @@
 import { useNavigate } from 'react-router-dom'
-import { ShoppingCart, Search } from 'lucide-react'
+import { ShoppingCart, Search, Menu } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 
-export default function HeaderCliente({ onSearch, searchValue }) {
+export default function HeaderCliente({ onSearch, searchValue, onMenuToggle }) {
   const { totalItems } = useCart()
   const navigate = useNavigate()
 
   return (
     <header className="main-header">
+      {/* Hamburger — visible sólo en móvil via CSS */}
+      <button
+        className="hamburger-btn"
+        onClick={onMenuToggle}
+        aria-label="Abrir menú"
+      >
+        <Menu size={22} />
+      </button>
+
       <div className="search-wrapper">
         <Search size={16} className="search-icon" />
         <input
@@ -21,11 +30,11 @@ export default function HeaderCliente({ onSearch, searchValue }) {
 
       <button
         className="btn btn-secondary"
-        style={{ position: 'relative', gap: 8 }}
+        style={{ position: 'relative', gap: 8, flexShrink: 0 }}
         onClick={() => navigate('/cart')}
       >
         <ShoppingCart size={18} />
-        Carrito
+        <span className="cart-label">Carrito</span>
         {totalItems > 0 && (
           <span style={{
             position: 'absolute',

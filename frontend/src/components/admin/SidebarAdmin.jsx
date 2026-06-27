@@ -10,7 +10,7 @@ const navItems = [
   { to: '/admin/reportes',   label: 'Reportes',    icon: BarChart2 },
 ]
 
-export default function SidebarAdmin() {
+export default function SidebarAdmin({ isOpen = false, onClose }) {
   const { logout, currentUser } = useAuth()
   const navigate = useNavigate()
 
@@ -21,7 +21,7 @@ export default function SidebarAdmin() {
     : 'A'
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${isOpen ? ' open' : ''}`}>
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">O</div>
         <div>
@@ -49,6 +49,7 @@ export default function SidebarAdmin() {
             to={to}
             end={end}
             className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
+            onClick={onClose}
           >
             <Icon size={18} />
             {label}

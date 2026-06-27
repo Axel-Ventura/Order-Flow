@@ -82,7 +82,7 @@ export default function Reportes() {
   return (
     <div>
       {/* Summary KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="reportes-kpis">
         {[
           { label: 'Ingresos totales (6 meses)', value: formatCurrency(totalIngresos), color: '#10b981' },
           { label: 'Pedidos totales (6 meses)',  value: totalPedidosMes,               color: '#4f46e5' },
@@ -97,7 +97,7 @@ export default function Reportes() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, marginBottom: 24 }}>
+      <div className="reportes-charts">
         {/* Line chart */}
         <div className="card">
           <div className="card-header">
@@ -183,17 +183,17 @@ export default function Reportes() {
             <tbody>
               {reportesMensuales.map((r) => (
                 <tr key={r.mes}>
-                  <td style={{ fontWeight: 600 }}>{r.mes}</td>
-                  <td>{r.pedidos}</td>
-                  <td style={{ fontWeight: 700, color: 'var(--success)' }}>{formatCurrency(r.ventas)}</td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{formatCurrency(r.pedidos > 0 ? r.ventas / r.pedidos : 0)}</td>
+                  <td data-label="Mes" style={{ fontWeight: 600 }}>{r.mes}</td>
+                  <td data-label="Pedidos">{r.pedidos}</td>
+                  <td data-label="Ventas" style={{ fontWeight: 700, color: 'var(--success)' }}>{formatCurrency(r.ventas)}</td>
+                  <td data-label="Ticket promedio" style={{ color: 'var(--text-secondary)' }}>{formatCurrency(r.pedidos > 0 ? r.ventas / r.pedidos : 0)}</td>
                 </tr>
               ))}
               <tr style={{ background: 'var(--primary-50)', fontWeight: 700 }}>
-                <td>Total</td>
-                <td>{totalPedidosMes}</td>
-                <td style={{ color: 'var(--primary-600)' }}>{formatCurrency(totalIngresos)}</td>
-                <td>{formatCurrency(totalPedidosMes > 0 ? totalIngresos / totalPedidosMes : 0)}</td>
+                <td data-label="Mes">Total</td>
+                <td data-label="Pedidos">{totalPedidosMes}</td>
+                <td data-label="Ventas" style={{ color: 'var(--primary-600)' }}>{formatCurrency(totalIngresos)}</td>
+                <td data-label="Ticket promedio">{formatCurrency(totalPedidosMes > 0 ? totalIngresos / totalPedidosMes : 0)}</td>
               </tr>
             </tbody>
           </table>

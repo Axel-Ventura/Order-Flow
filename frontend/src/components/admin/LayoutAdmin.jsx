@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import SidebarAdmin from './SidebarAdmin'
 import HeaderAdmin from './HeaderAdmin'
@@ -13,12 +14,22 @@ const pageTitles = {
 export default function LayoutAdmin() {
   const { pathname } = useLocation()
   const meta = pageTitles[pathname] || {}
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="app-layout">
-      <SidebarAdmin />
+      {/* Overlay oscuro — sólo activo en móvil cuando sidebar está abierto */}
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' visible' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      <SidebarAdmin isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="main-content">
-        <HeaderAdmin title={meta.title} subtitle={meta.subtitle} />
+        <HeaderAdmin
+          title={meta.title}
+          subtitle={meta.subtitle}
+          onMenuToggle={() => setSidebarOpen((prev) => !prev)}
+        />
         <main className="page-content">
           <Outlet />
         </main>
