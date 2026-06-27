@@ -33,8 +33,8 @@ export default function Clientes() {
   return (
     <div>
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-        <div className="search-wrapper" style={{ maxWidth: 300 }}>
+      <div className="filter-bar">
+        <div className="search-wrapper">
           <Search size={16} className="search-icon" />
           <input
             className="search-input"
@@ -75,45 +75,44 @@ export default function Clientes() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length > 0 ? filtered.map((c) => (
+              {filtered.map((c) => (
                 <tr key={c.id}>
-                  <td>
+                  <td data-label="Cliente">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div className="avatar" style={{ width: 34, height: 34, fontSize: '0.78rem' }}>
                         {c.nombre.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
-                      <div>
+                      <div style={{ textAlign: 'left' }}>
                         <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{c.nombre}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.correo}</div>
                       </div>
                     </div>
                   </td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{c.telefono || '—'}</td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{c.direccion || '—'}</td>
-                  <td>
+                  <td data-label="Teléfono" style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{c.telefono || '—'}</td>
+                  <td data-label="Dirección" style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{c.direccion || '—'}</td>
+                  <td data-label="Pedidos">
                     <span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>
                       {c.totalPedidos}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Estado">
                     <span className={`badge ${getBadgeClass(c.estado)}`}>
                       {getBadgeLabel(c.estado)}
                     </span>
                   </td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                  <td data-label="Registro" style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
                     {formatDate((c.fechaRegistro || '').split('T')[0])}
                   </td>
                 </tr>
-              )) : (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                    No se encontraron clientes
-                  </td>
-                </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+            No se encontraron clientes
+          </div>
+        )}
       </div>
     </div>
   )

@@ -114,9 +114,9 @@ export default function Inventario() {
   return (
     <div>
       {/* Controls */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+      <div className="inventario-controls" style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 12 }}>
-          <div className="search-wrapper" style={{ maxWidth: 280 }}>
+          <div className="search-wrapper">
             <Search size={16} className="search-icon" />
             <input
               className="search-input"
@@ -137,7 +137,7 @@ export default function Inventario() {
             <option value="agotado">Agotados</option>
           </select>
         </div>
-        <button className="btn btn-primary" onClick={() => setModal('nuevo')}>
+        <button className="btn btn-primary btn-nuevo" onClick={() => setModal('nuevo')}>
           <Plus size={16} />
           Nuevo Producto
         </button>
@@ -161,10 +161,10 @@ export default function Inventario() {
             <tbody>
               {filtered.map((p) => (
                 <tr key={p.id}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <td data-label="Producto">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'flex-end' }}>
                       <span style={{ fontSize: '1.4rem' }}>{p.emoji}</span>
-                      <div>
+                      <div style={{ textAlign: 'left' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{p.nombre}</div>
                           <span style={{ fontSize: '0.65rem', background: 'var(--primary-100)', color: 'var(--primary-700)', padding: '1px 5px', borderRadius: 4, textTransform: 'capitalize', fontWeight: 600 }}>
@@ -177,15 +177,15 @@ export default function Inventario() {
                       </div>
                     </div>
                   </td>
-                  <td style={{ fontWeight: 700, color: 'var(--primary-600)' }}>
+                  <td data-label="Precio" style={{ fontWeight: 700, color: 'var(--primary-600)' }}>
                     ${parseFloat(p.precio).toFixed(2)}
                   </td>
-                  <td style={{ fontWeight: 600 }}>{p.stock}</td>
-                  <td>
+                  <td data-label="Stock" style={{ fontWeight: 600 }}>{p.stock}</td>
+                  <td data-label="Estado">
                     <span className={`badge ${getStockBadge(p)}`}>{getStockLabel(p)}</span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
+                  <td data-label="Acciones">
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                       <button
                         className="btn btn-secondary btn-sm"
                         onClick={() => setModal(p)}
@@ -206,6 +206,11 @@ export default function Inventario() {
             </tbody>
           </table>
         </div>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+            No se encontraron productos
+          </div>
+        )}
       </div>
 
       {/* Modal */}

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { Filter, X, Check, Search as SearchIcon } from 'lucide-react'
 import { productosApi } from '../../services/productosApi'
 import { getBadgeClass, getBadgeLabel } from '../../data/mockData'
 import ProductCard from '../../components/cliente/ProductCard'
@@ -12,6 +13,11 @@ export default function Catalogo() {
   const [categorias, setCategorias] = useState([{ id: 'todos', label: 'Todos' }])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Mobile Bottom Sheet States
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [searchCat, setSearchCat] = useState('')
+  const [tempCat, setTempCat] = useState('todos')
 
   useEffect(() => {
     setLoading(true)
@@ -39,6 +45,35 @@ export default function Catalogo() {
     return matchCat && matchSearch
   })
 
+  // Conteo dinámico de productos por categoría (ignorando el filtro de categoría actual, pero respetando la búsqueda global)
+  const catCounts = useMemo(() => {
+    const counts = { todos: 0 }
+    productos.forEach(p => {
+      const matchSearch = !search || p.nombre.toLowerCase().includes(search.toLowerCase())
+      if (matchSearch) {
+        counts.todos++
+        counts[p.categoria] = (counts[p.categoria] || 0) + 1
+      }
+    })
+    return counts
+  }, [productos, search])
+
+  // Categorías filtradas dentro del modal
+  const modalCategories = categorias.filter(c => 
+    c.label.toLowerCase().includes(searchCat.toLowerCase())
+  )
+
+  const handleOpenModal = () => {
+    setTempCat(categoriaActiva)
+    setSearchCat('')
+    setShowMobileFilters(true)
+  }
+
+  const handleApplyModal = () => {
+    setCategoriaActiva(tempCat)
+    setShowMobileFilters(false)
+  }
+
   if (loading) return <div className="empty-state"><div className="empty-icon">⏳</div><p>Cargando productos...</p></div>
   if (error)   return <div className="empty-state"><div className="empty-icon">⚠️</div><p>Error: {error}</p></div>
 
@@ -51,17 +86,31 @@ export default function Catalogo() {
         </div>
       </div>
 
-      {/* Categorías */}
-      <div className="chips mb-6">
+      {/* Categorías (Desktop) */}
+      <div className="chips mb-6 desktop-only">
         {categorias.map((cat) => (
           <button
             key={cat.id}
             className={`chip${categoriaActiva === cat.id ? ' active' : ''}`}
             onClick={() => setCategoriaActiva(cat.id)}
           >
-            {cat.label}
+            {cat.label} {catCounts[cat.id] !== undefined ? `(${catCounts[cat.id]})` : ''}
           </button>
         ))}
+      </div>
+
+      {/* Botón Filtros (Mobile) */}
+      <div className="mobile-only">
+        <div className="mobile-filter-bar" onClick={handleOpenModal}>
+          <div className="filter-text">
+            Categoría: <span style={{ color: 'var(--primary-600)' }}>
+              {categorias.find(c => c.id === categoriaActiva)?.label || 'Todos'}
+            </span>
+          </div>
+          <div className="filter-icon">
+            <Filter size={18} />
+          </div>
+        </div>
       </div>
 
       {/* Grid de productos */}
@@ -76,6 +125,74 @@ export default function Catalogo() {
           <div className="empty-icon">🔍</div>
           <h3 style={{ color: 'var(--text-secondary)' }}>No se encontraron productos</h3>
           <p>Intenta con otra búsqueda o categoría</p>
+        </div>
+      )}
+
+      {/* Modal Bottom Sheet para móvil */}
+      {showMobileFilters && (
+        <div className="modal-overlay mobile-only flex" onClick={() => setShowMobileFilters(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '100%', padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>Filtrar por categoría</h2>
+              <button 
+                onClick={() => setShowMobileFilters(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="search-wrapper" style={{ maxWidth: '100%' }}>
+              <SearchIcon size={16} className="search-icon" />
+              <input
+                className="search-input"
+                type="text"
+                placeholder="Buscar categoría..."
+                value={searchCat}
+                onChange={e => setSearchCat(e.target.value)}
+              />
+            </div>
+
+            <div className="category-list">
+              {modalCategories.length > 0 ? modalCategories.map((cat) => {
+                const isSelected = tempCat === cat.id
+                return (
+                  <div 
+                    key={cat.id} 
+                    className={`category-item ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setTempCat(cat.id)}
+                  >
+                    <div className="cat-name">
+                      {isSelected ? <Check size={18} /> : <div style={{ width: 18 }} />}
+                      {cat.label}
+                    </div>
+                    <div className="cat-count">{catCounts[cat.id] || 0}</div>
+                  </div>
+                )
+              }) : (
+                <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                  No hay categorías que coincidan.
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                className="btn" 
+                style={{ flex: 1, justifyContent: 'center', background: 'var(--gray-100)' }}
+                onClick={() => setTempCat('todos')}
+              >
+                Limpiar
+              </button>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 2, justifyContent: 'center' }}
+                onClick={handleApplyModal}
+              >
+                Aplicar filtros
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

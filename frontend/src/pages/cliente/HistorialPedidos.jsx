@@ -60,16 +60,16 @@ export default function HistorialPedidos() {
               <tbody>
                 {pedidos.map((pedido) => (
                   <tr key={pedido.id}>
-                    <td>
+                    <td data-label="Pedido">
                       <span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>#{pedido.id}</span>
                     </td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{formatDate(pedido.fecha?.split('T')[0] || pedido.fecha)}</td>
-                    <td>
+                    <td data-label="Fecha" style={{ color: 'var(--text-secondary)' }}>{formatDate(pedido.fecha?.split('T')[0] || pedido.fecha)}</td>
+                    <td data-label="Establecimiento">
                       <span style={{ fontSize: '0.8rem', background: 'var(--primary-50)', color: 'var(--primary-700)', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
                         🏬 {pedido.vendedor?.nombre || 'Establecimiento'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Productos">
                       <div style={{ fontSize: '0.82rem' }}>
                         {(pedido.productos || []).map((dp, i) => (
                           <div key={i}>
@@ -78,17 +78,17 @@ export default function HistorialPedidos() {
                         ))}
                       </div>
                     </td>
-                    <td style={{ fontWeight: 600 }}>{formatCurrency(pedido.total)}</td>
-                    <td>
+                    <td data-label="Total" style={{ fontWeight: 600 }}>{formatCurrency(pedido.total)}</td>
+                    <td data-label="Estado">
                       <span className={`badge ${getBadgeClass(pedido.estado)}`}>
                         {getBadgeLabel(pedido.estado)}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Acción">
                       <button
                         className="btn btn-secondary btn-sm"
                         onClick={() => navigate(`/tracking/${pedido.id}`)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}
                       >
                         <Eye size={14} />
                         Detalles
