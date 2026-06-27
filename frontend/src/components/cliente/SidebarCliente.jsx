@@ -8,7 +8,7 @@ const navItems = [
   { to: '/profile', label: 'Mi Perfil',   icon: User },
 ]
 
-export default function SidebarCliente() {
+export default function SidebarCliente({ isOpen = false, onClose }) {
   const { logout, currentUser } = useAuth()
   const navigate = useNavigate()
 
@@ -22,7 +22,7 @@ export default function SidebarCliente() {
     : 'U'
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${isOpen ? ' open' : ''}`}>
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">O</div>
         <span className="sidebar-logo-text">OrderFlow</span>
@@ -50,6 +50,7 @@ export default function SidebarCliente() {
             to={to}
             end={end}
             className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
+            onClick={onClose}
           >
             <Icon size={18} />
             {label}

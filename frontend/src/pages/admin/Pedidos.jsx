@@ -78,8 +78,8 @@ export default function Pedidos() {
       )}
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-        <div className="search-wrapper" style={{ maxWidth: 300 }}>
+      <div className="filter-bar">
+        <div className="search-wrapper">
           <Search size={16} className="search-icon" />
           <input
             className="search-input"
@@ -124,41 +124,41 @@ export default function Pedidos() {
               </tr>
             </thead>
             <tbody>
-              {paginated.length > 0 ? paginated.map((p) => (
+              {paginated.map((p) => (
                 <tr key={p.id}>
-                  <td>
+                  <td data-label="Pedido">
                     <span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>#{p.id}</span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <td data-label="Cliente">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                       <div className="avatar" style={{ width: 28, height: 28, fontSize: '0.7rem' }}>
                         {(p.cliente?.nombre || 'U').split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>
-                      <div>
+                      <div style={{ textAlign: 'left' }}>
                         <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>{p.cliente?.nombre || '—'}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.cliente?.correo || ''}</div>
                       </div>
                     </div>
                   </td>
-                  <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                  <td data-label="Productos" style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                     {(p.productos || []).map((dp, i) => (
                       <div key={i}>{dp.cantidad}× {dp.producto?.nombre}</div>
                     ))}
                   </td>
-                  <td style={{ fontWeight: 600 }}>{formatCurrency(p.total)}</td>
-                  <td style={{ textTransform: 'capitalize', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                  <td data-label="Total" style={{ fontWeight: 600 }}>{formatCurrency(p.total)}</td>
+                  <td data-label="Canal" style={{ textTransform: 'capitalize', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                     {p.canal}
                   </td>
-                  <td>
+                  <td data-label="Estado">
                     <span className={`badge ${getBadgeClass(p.estado)}`}>
                       {getBadgeLabel(p.estado)}
                     </span>
                   </td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                  <td data-label="Fecha" style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
                     {formatDate((p.fecha || '').split('T')[0])}
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <td data-label="Acción">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
                       <select
                         className="form-select"
                         style={{
@@ -183,16 +183,15 @@ export default function Pedidos() {
                     </div>
                   </td>
                 </tr>
-              )) : (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                    No se encontraron pedidos
-                  </td>
-                </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
+        {paginated.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+            No se encontraron pedidos
+          </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (

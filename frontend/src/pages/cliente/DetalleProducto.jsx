@@ -64,9 +64,9 @@ export default function DetalleProducto() {
       </button>
 
       <div className="card" style={{ maxWidth: 740, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+        <div className="detalle-grid">
           {/* Imagen */}
-          <div style={{
+          <div className="detalle-img" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'var(--gray-50)',
             fontSize: '6rem',

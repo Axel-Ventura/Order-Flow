@@ -77,7 +77,7 @@ export default function SeguimientoPedido() {
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
+      <div className="tracking-grid">
         {/* Stepper */}
         <div className="card">
           <div className="card-header">

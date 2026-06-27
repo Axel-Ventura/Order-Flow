@@ -51,7 +51,7 @@ export default function MiPedido() {
           </p>
         )}
         <p>Tu pedido ha sido recibido y está siendo procesado.</p>
-        <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 8 }} className="confirm-actions">
           <button className="btn btn-secondary" onClick={() => navigate('/history')}>
             Ver mis pedidos
           </button>
@@ -94,7 +94,7 @@ export default function MiPedido() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'start' }}>
+      <div className="cart-grid">
         {/* Items */}
         <div className="card">
           <div className="card-header">
