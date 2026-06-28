@@ -130,7 +130,8 @@ p  { color: var(--text-secondary); line-height: 1.65; }
 
 .sidebar {
   width: var(--sidebar-width);
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
@@ -199,6 +200,7 @@ p  { color: var(--text-secondary); line-height: 1.65; }
 .sidebar-footer {
   padding: 12px 8px;
   border-top: 1px solid var(--border);
+  margin-top: auto;
 }
 
 /* Main content area */
@@ -1005,6 +1007,7 @@ p  { color: var(--text-secondary); line-height: 1.65; }
     z-index: 300;
     transition: transform 0.28s ease;
     box-shadow: none;
+    overflow-y: auto;
   }
   .sidebar.open {
     transform: translateX(0);
